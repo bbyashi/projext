@@ -1,64 +1,42 @@
-const express = require('express');
-const crypto = require('crypto');
-const cors = require('cors');
-require('dotenv').config();
+const express = require("express");
+const path = require("path");
+const bodyParser = require("body-parser");
+const cors = require("cors");
 
 const app = express();
+
+// Middleware
 app.use(cors());
-app.use(express.json());
+app.use(bodyParser.json());
+app.use(express.static(path.join(__dirname, "public")));
 
-const BOT_TOKEN = process.env.BOT_TOKEN;
+// Root route -> index.html
+app.get("/", (req, res) => {
+  res.sendFile(path.join(__dirname, "public", "index.html"));
+});
 
-function checkTelegramAuth(data) {
-  const { hash, ...fields } = data;
-  const secret = crypto.createHash('sha256').update(BOT_TOKEN).digest();
-  const sorted = Object.keys(fields).sort().map(k => `${k}=${fields[k]}`).join('\n');
-  const hmac = crypto.createHmac('sha256', secret).update(sorted).digest('hex');
-  return hmac === hash;
-}
+// Example Telegram auth handler (you can customize)
+app.get("/auth/telegram", (req, res) => {
+  const { id, first_name, username } = req.query;
 
-app.get('/auth/telegram', (req, res) => {
-  if (!checkTelegramAuth(req.query)) {
-    return res.status(403).send('Invalid Telegram login.');
+  if (!id || !username) {
+    return res.status(400).send("Missing Telegram data");
   }
 
-  const user = {
-    id: req.query.id,
-    first_name: req.query.first_name,
-    last_name: req.query.last_name,
-    username: req.query.username,
-    photo_url: req.query.photo_url
-  };
+  // ✅ TODO: Save user to DB or session here
 
-  const script = `
-    <script>
-      window.opener.onTelegramAuth(${JSON.stringify(user)});
-      window.close();
-    </script>
-  `;
-  res.send(script);
+  // For now: redirect to dashboard or home
+  res.redirect("/");
 });
 
-// Placeholder API endpoints
-app.get('/user/:id', (req, res) => {
-  res.json({
-    walletBalance: 10.5,
-    airdropsLeft: 2,
-    transactions: [
-      { type: 'buy', amount: 5, date: new Date().toISOString() },
-      { type: 'claim', amount: 2, date: new Date().toISOString() }
-    ]
-  });
+// Buy Airdrop endpoint (if Razorpay or backend logic exists)
+app.post("/buy-airdrop", (req, res) => {
+  // You’ll implement Razorpay payment creation here
+  res.json({ message: "Payment process will go here." });
 });
 
-app.post('/create-order', (req, res) => {
-  const amount = (req.body.amount || 1) * 100;
-  res.json({ id: 'order_123', amount, currency: 'INR' });
-});
-
-app.post('/verify-payment', (req, res) => {
-  res.sendStatus(200);
-});
-
+// Start server
 const PORT = process.env.PORT || 3000;
-app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
+app.listen(PORT, () => {
+  console.log(`🚀 Server running at http://localhost:${PORT}`);
+});
