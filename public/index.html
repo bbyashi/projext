@@ -5,36 +5,11 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>My Telegram Bot Site</title>
 
-  <!-- Telegram Auth Callback -->
-  <script>
-    window.TelegramLoginWidgetCallback = onTelegramAuth;
-  </script>
-
-  <!-- Telegram Login Widget -->
-  <script async src="https://telegram.org/js/telegram-widget.js?7"
-          data-telegram-login="babyusbot"
-          data-size="large"
-          data-userpic="false"
-          data-radius="10"
-          data-auth-url="https://projext-f7gs.onrender.com/auth/telegram"
-          data-request-access="write"></script>
-
   <!-- Razorpay Script -->
   <script src="https://checkout.razorpay.com/v1/checkout.js"></script>
 
   <!-- Tailwind CSS -->
   <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
-</head>
-<body class="bg-gray-100 flex flex-col items-center justify-center min-h-screen">
-  <div class="bg-white shadow-xl rounded-2xl p-10 max-w-md w-full text-center">
-    <h1 class="text-3xl font-bold mb-4">Connect Your Telegram</h1>
-    <p class="text-gray-600 mb-6">Login with Telegram to access your dashboard</p>
-  </div>
-
-  <!-- Dashboard -->
-  <div id="dashboard" class="hidden bg-white shadow-xl rounded-2xl p-6 max-w-2xl w-full mt-8 animate-fade-in">
-    <!-- ... Dashboard contents from previous HTML ... -->
-  </div>
 
   <!-- Animations -->
   <style>
@@ -43,26 +18,55 @@
     @keyframes fadeIn { from {opacity: 0;} to {opacity: 1;} }
     @keyframes slideIn { from {transform: translateY(20px); opacity: 0;} to {transform: translateY(0); opacity: 1;} }
   </style>
+</head>
+<body class="bg-gray-100 flex flex-col items-center justify-center min-h-screen">
+  <div class="bg-white shadow-xl rounded-2xl p-10 max-w-md w-full text-center">
+    <h1 class="text-3xl font-bold mb-4">Connect Your Telegram</h1>
+    <p class="text-gray-600 mb-6">Login with Telegram to access your dashboard</p>
 
-  <!-- JavaScript for Logic -->
+    <!-- ✅ Telegram Login Button Wrapper -->
+    <div id="telegram-button" class="flex justify-center">
+      <script async src="https://telegram.org/js/telegram-widget.js?7"
+              data-telegram-login="babyusbot"
+              data-size="large"
+              data-userpic="false"
+              data-radius="10"
+              data-auth-url="https://projext-f7gs.onrender.com/auth/telegram"
+              data-request-access="write">
+      </script>
+    </div>
+  </div>
+
+  <!-- Hidden Dashboard -->
+  <div id="dashboard" class="hidden bg-white shadow-xl rounded-2xl p-6 max-w-2xl w-full mt-8 animate-fade-in">
+    <!-- You can insert dashboard HTML content here -->
+    <p class="text-lg mb-2">Welcome! Your dashboard will appear here after login.</p>
+    <p id="ref-link" class="text-sm text-blue-600 mb-2"></p>
+    <p><strong>Wallet:</strong> <span id="wallet-balance">0 USDT</span></p>
+    <p><strong>Airdrops Left:</strong> <span id="airdrops-left">0</span></p>
+    <ul id="transaction-list" class="list-disc pl-5 mt-4 text-sm text-gray-700"></ul>
+
+    <div class="mt-6">
+      <label class="block mb-1 font-semibold">Airdrop Amount:</label>
+      <input id="airdrop-amount" type="number" value="1" min="1" class="border p-2 rounded w-24">
+      <p class="mt-1">Total: <span id="total-cost">1 USDT</span></p>
+      <button onclick="initiatePayment()" class="mt-4 bg-yellow-500 text-white px-4 py-2 rounded hover:bg-yellow-600">
+        Buy Airdrop
+      </button>
+      <p id="buy-status" class="mt-2 hidden text-sm font-semibold"></p>
+    </div>
+
+    <div id="countdown" class="mt-6 text-gray-600"></div>
+  </div>
+
+  <!-- JavaScript for Telegram, Payment, and Dashboard -->
   <script>
     let telegramId = null;
 
-    document.addEventListener('DOMContentLoaded', () => {
-      const input = document.getElementById('airdrop-amount');
-      const totalCost = document.getElementById('total-cost');
-      input?.addEventListener('input', () => {
-        const value = parseInt(input.value) || 1;
-        totalCost.textContent = `${value} USDT`;
-      });
-      updateCountdown();
-      setInterval(updateCountdown, 1000);
-    });
-
     function onTelegramAuth(user) {
       telegramId = user.id.toString();
-      const widget = document.querySelector('script[data-telegram-login]');
-      if (widget) widget.style.display = 'none';
+      const telegramDiv = document.getElementById("telegram-button");
+      if (telegramDiv) telegramDiv.style.display = 'none';
       document.querySelector('#dashboard')?.classList.remove('hidden');
       fetchUserData();
       document.getElementById("ref-link").textContent = `https://projext-f7gs.onrender.com/?ref=${telegramId}`;
@@ -103,7 +107,7 @@
       .then(res => res.json())
       .then(order => {
         const options = {
-          key: "rzp_test_YourKeyHere",
+          key: "rzp_test_YourKeyHere", // Replace with real Razorpay key
           amount: order.amount,
           currency: order.currency,
           name: "Airdrop Purchase",
@@ -159,6 +163,17 @@
         document.getElementById("countdown").textContent = `⏳ Claim cooldown: ${mins}m ${secs}s`;
       }
     }
+
+    document.addEventListener('DOMContentLoaded', () => {
+      const input = document.getElementById('airdrop-amount');
+      const totalCost = document.getElementById('total-cost');
+      input?.addEventListener('input', () => {
+        const value = parseInt(input.value) || 1;
+        totalCost.textContent = `${value} USDT`;
+      });
+      updateCountdown();
+      setInterval(updateCountdown, 1000);
+    });
   </script>
 </body>
 </html>
