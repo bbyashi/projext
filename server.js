@@ -1,77 +1,64 @@
-// server.js (Express Backend for Telegram + Razorpay)
-const express = require("express");
-const cors = require("cors");
-const bodyParser = require("body-parser");
-const crypto = require("crypto");
-require("dotenv").config();
+const express = require('express');
+const crypto = require('crypto');
+const cors = require('cors');
+require('dotenv').config();
 
 const app = express();
 app.use(cors());
-app.use(bodyParser.json());
+app.use(express.json());
 
-const TELEGRAM_BOT_TOKEN = process.env.BOT_TOKEN || "your_bot_token_here";
+const BOT_TOKEN = process.env.BOT_TOKEN;
 
-// Telegram Auth Route
-app.get("/auth/telegram", (req, res) => {
-  const data = req.query;
+function checkTelegramAuth(data) {
+  const { hash, ...fields } = data;
+  const secret = crypto.createHash('sha256').update(BOT_TOKEN).digest();
+  const sorted = Object.keys(fields).sort().map(k => `${k}=${fields[k]}`).join('\n');
+  const hmac = crypto.createHmac('sha256', secret).update(sorted).digest('hex');
+  return hmac === hash;
+}
 
-  const checkString = Object.keys(data)
-    .filter((key) => key !== "hash")
-    .sort()
-    .map((key) => `${key}=${data[key]}`)
-    .join("\n");
-
-  const secret = crypto
-    .createHash("sha256")
-    .update(TELEGRAM_BOT_TOKEN)
-    .digest();
-
-  const hash = crypto
-    .createHmac("sha256", secret)
-    .update(checkString)
-    .digest("hex");
-
-  if (hash !== data.hash) {
-    return res.status(401).send("Unauthorized: Invalid Telegram login");
+app.get('/auth/telegram', (req, res) => {
+  if (!checkTelegramAuth(req.query)) {
+    return res.status(403).send('Invalid Telegram login.');
   }
 
-  // Send script to call onTelegramAuth in parent window
-  return res.send(`
+  const user = {
+    id: req.query.id,
+    first_name: req.query.first_name,
+    last_name: req.query.last_name,
+    username: req.query.username,
+    photo_url: req.query.photo_url
+  };
+
+  const script = `
     <script>
-      window.opener.onTelegramAuth(${JSON.stringify(data)});
+      window.opener.onTelegramAuth(${JSON.stringify(user)});
       window.close();
     </script>
-  `);
+  `;
+  res.send(script);
 });
 
-// Dummy Routes for other features (replace with real logic)
-app.get("/user/:id", (req, res) => {
-  const id = req.params.id;
+// Placeholder API endpoints
+app.get('/user/:id', (req, res) => {
   res.json({
-    walletBalance: 25.75,
-    airdropsLeft: 4,
-    transactions: [],
+    walletBalance: 10.5,
+    airdropsLeft: 2,
+    transactions: [
+      { type: 'buy', amount: 5, date: new Date().toISOString() },
+      { type: 'claim', amount: 2, date: new Date().toISOString() }
+    ]
   });
 });
 
-app.post("/complete-task", (req, res) => {
+app.post('/create-order', (req, res) => {
+  const amount = (req.body.amount || 1) * 100;
+  res.json({ id: 'order_123', amount, currency: 'INR' });
+});
+
+app.post('/verify-payment', (req, res) => {
   res.sendStatus(200);
 });
 
-app.post("/create-order", (req, res) => {
-  const { amount } = req.body;
-  const order = {
-    id: "order_ABC123",
-    amount: amount * 100,
-    currency: "INR",
-  };
-  res.json(order);
-});
-
-app.post("/verify-payment", (req, res) => {
-  res.sendStatus(200);
-});
-
-// Server Start
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
