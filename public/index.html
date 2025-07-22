@@ -9,7 +9,7 @@
           data-size="large"
           data-userpic="false"
           data-radius="10"
-          data-auth-url="https://yourserver.com/auth/telegram"
+          data-auth-url="https://projext-f7gs.onrender.com/auth/telegram"
           data-request-access="write"></script>
   <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
 </head>
@@ -64,7 +64,7 @@
     }
 
     function fetchUserData() {
-      fetch(`https://yourserver.com/user/${telegramId}`)
+      fetch(`https://projext-f7gs.onrender.com/user/${telegramId}`)
         .then(res => res.json())
         .then(data => {
           document.getElementById('wallet-balance').textContent = `${data.walletBalance.toFixed(2)} USDT`;
@@ -80,7 +80,7 @@
 
     function completeTask(task) {
       if (!telegramId) return;
-      fetch('https://yourserver.com/complete-task', {
+      fetch('https://projext-f7gs.onrender.com/complete-task', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ telegramId, task })
@@ -90,7 +90,7 @@
     function buyAirdrop() {
       if (!telegramId) return;
       const amount = 1;
-      fetch('https://yourserver.com/buy-airdrop', {
+      fetch('https://projext-f7gs.onrender.com/buy-airdrop', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ telegramId, amount })
