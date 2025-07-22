@@ -1,83 +1,77 @@
-require('dotenv').config();
-const express = require('express');
-const mongoose = require('mongoose');
-const cors = require('cors');
+// server.js (Express Backend for Telegram + Razorpay)
+const express = require("express");
+const cors = require("cors");
+const bodyParser = require("body-parser");
+const crypto = require("crypto");
+require("dotenv").config();
 
 const app = express();
-const PORT = process.env.PORT || 3000;
-
-// Middleware
 app.use(cors());
-app.use(express.json());
-app.use(express.static('public'));
+app.use(bodyParser.json());
 
-// MongoDB connection
-mongoose.connect(process.env.MONGO_URI, {
-  useNewUrlParser: true,
-  useUnifiedTopology: true
-}).then(() => console.log('MongoDB connected'))
-  .catch(err => console.error('MongoDB error:', err));
+const TELEGRAM_BOT_TOKEN = process.env.BOT_TOKEN || "your_bot_token_here";
 
-// Schema & Model
-const userSchema = new mongoose.Schema({
-  telegramId: String,
-  username: String,
-  walletBalance: { type: Number, default: 0 },
-  tasksCompleted: { type: Object, default: {} },
-  transactions: [{
-    type: { type: String },
-    amount: Number,
-    date: { type: Date, default: Date.now }
-  }]
-});
-const User = mongoose.model('User', userSchema);
+// Telegram Auth Route
+app.get("/auth/telegram", (req, res) => {
+  const data = req.query;
 
-// Create or find user
-app.post('/auth/telegram', async (req, res) => {
-  const { id, username } = req.body;
-  let user = await User.findOne({ telegramId: id });
-  if (!user) {
-    user = new User({ telegramId: id, username });
-    await user.save();
+  const checkString = Object.keys(data)
+    .filter((key) => key !== "hash")
+    .sort()
+    .map((key) => `${key}=${data[key]}`)
+    .join("\n");
+
+  const secret = crypto
+    .createHash("sha256")
+    .update(TELEGRAM_BOT_TOKEN)
+    .digest();
+
+  const hash = crypto
+    .createHmac("sha256", secret)
+    .update(checkString)
+    .digest("hex");
+
+  if (hash !== data.hash) {
+    return res.status(401).send("Unauthorized: Invalid Telegram login");
   }
-  res.status(200).json({ message: 'User authenticated' });
+
+  // Send script to call onTelegramAuth in parent window
+  return res.send(`
+    <script>
+      window.opener.onTelegramAuth(${JSON.stringify(data)});
+      window.close();
+    </script>
+  `);
 });
 
-// Fetch user data
-app.get('/user/:telegramId', async (req, res) => {
-  const user = await User.findOne({ telegramId: req.params.telegramId });
-  if (!user) return res.status(404).json({ message: 'User not found' });
+// Dummy Routes for other features (replace with real logic)
+app.get("/user/:id", (req, res) => {
+  const id = req.params.id;
   res.json({
-    walletBalance: user.walletBalance,
-    transactions: user.transactions
+    walletBalance: 25.75,
+    airdropsLeft: 4,
+    transactions: [],
   });
 });
 
-// Complete task
-app.post('/complete-task', async (req, res) => {
-  const { telegramId, task } = req.body;
-  const user = await User.findOne({ telegramId });
-  if (!user) return res.status(404).json({ message: 'User not found' });
-
-  user.tasksCompleted[task] = true;
-  await user.save();
-  res.json({ message: 'Task completed' });
+app.post("/complete-task", (req, res) => {
+  res.sendStatus(200);
 });
 
-// Buy airdrop
-app.post('/buy-airdrop', async (req, res) => {
-  const { telegramId, amount } = req.body;
-  const user = await User.findOne({ telegramId });
-  if (!user) return res.status(404).json({ message: 'User not found' });
-
-  user.walletBalance += amount;
-  user.transactions.push({ type: 'airdrop', amount });
-  await user.save();
-
-  res.json({ message: 'Airdrop purchased' });
+app.post("/create-order", (req, res) => {
+  const { amount } = req.body;
+  const order = {
+    id: "order_ABC123",
+    amount: amount * 100,
+    currency: "INR",
+  };
+  res.json(order);
 });
 
-app.listen(PORT, () => {
-  console.log(`Server running on http://localhost:${PORT}`);
+app.post("/verify-payment", (req, res) => {
+  res.sendStatus(200);
 });
 
+// Server Start
+const PORT = process.env.PORT || 3000;
+app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
