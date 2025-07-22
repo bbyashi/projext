@@ -3,10 +3,10 @@ const path = require('path');
 const app = express();
 const PORT = process.env.PORT || 3000;
 
-// Serve frontend files (from public folder)
+// Serve frontend from public/
 app.use(express.static(path.join(__dirname, 'public')));
 
-// Add Telegram Auth handler
+// Telegram auth route
 app.get('/auth/telegram', (req, res) => {
   const { id, first_name, username } = req.query;
 
@@ -14,20 +14,17 @@ app.get('/auth/telegram', (req, res) => {
     return res.status(400).send('Missing Telegram user data');
   }
 
-  console.log('✅ Telegram login:', { id, first_name, username });
+  console.log('Logged in Telegram user:', { id, first_name, username });
 
-  // You can store user info in DB or session here if needed
-
-  // Redirect to homepage/dashboard
+  // Redirect after login
   res.redirect('/');
 });
 
-// Fallback route if nothing matches (optional)
+// Catch-all 404
 app.use((req, res) => {
   res.status(404).send('Not Found');
 });
 
-// Start server
 app.listen(PORT, () => {
-  console.log(`🚀 Server running on http://localhost:${PORT}`);
+  console.log(`Server running on http://localhost:${PORT}`);
 });
