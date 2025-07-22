@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>My Telegram Bot Site</title>
+  <script async src="https://telegram.org/js/telegram-widget.js?7"
+          data-telegram-login="YOUR_BOT_USERNAME"
+          data-size="large"
+          data-userpic="false"
+          data-radius="10"
+          data-auth-url="https://yourserver.com/auth/telegram"
+          data-request-access="write"></script>
+  <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+</head>
+<body class="bg-gray-100 flex flex-col items-center justify-center min-h-screen">
+  <div class="bg-white shadow-xl rounded-2xl p-10 max-w-md w-full text-center">
+    <h1 class="text-3xl font-bold mb-4">Connect Your Telegram</h1>
+    <p class="text-gray-600 mb-6">Login with Telegram to access your dashboard</p>
+    <!-- Telegram Login Button Will Be Rendered Here -->
+  </div>
+
+  <!-- Dashboard Section (hidden until login) -->
+  <div id="dashboard" class="hidden bg-white shadow-xl rounded-2xl p-6 max-w-2xl w-full mt-8">
+    <h2 class="text-2xl font-bold mb-4">Welcome to Your Dashboard</h2>
+    <p class="text-gray-700 mb-4">Complete tasks to earn rewards:</p>
+    <ul class="space-y-3 mb-6">
+      <li class="flex justify-between items-center bg-gray-100 p-4 rounded-lg">
+        <span>Join our Telegram Channel</span>
+        <a href="https://t.me/YOUR_CHANNEL" target="_blank" class="bg-blue-500 text-white px-4 py-2 rounded-lg" onclick="completeTask('telegramJoined')">Join</a>
+      </li>
+      <li class="flex justify-between items-center bg-gray-100 p-4 rounded-lg">
+        <span>Follow us on Instagram</span>
+        <a href="https://instagram.com/YOUR_PAGE" target="_blank" class="bg-pink-500 text-white px-4 py-2 rounded-lg" onclick="completeTask('instagramFollowed')">Follow</a>
+      </li>
+      <li class="flex justify-between items-center bg-gray-100 p-4 rounded-lg">
+        <span>Send a message to our bot</span>
+        <a href="https://t.me/YOUR_BOT_USERNAME" target="_blank" class="bg-green-500 text-white px-4 py-2 rounded-lg" onclick="completeTask('messagedBot')">Message</a>
+      </li>
+    </ul>
+
+    <h3 class="text-xl font-semibold mb-3">Wallet & Airdrops</h3>
+    <div class="bg-gray-100 p-4 rounded-lg mb-4">
+      <p class="text-gray-800 mb-2">Wallet Balance: <strong id="wallet-balance">Loading...</strong></p>
+      <button onclick="buyAirdrop()" class="bg-yellow-500 text-white px-4 py-2 rounded-lg">Buy Airdrop</button>
+    </div>
+
+    <div class="bg-gray-100 p-4 rounded-lg">
+      <h4 class="text-lg font-bold mb-2">Transaction History</h4>
+      <ul id="transaction-list" class="text-sm text-gray-600">
+        <li>Loading transactions...</li>
+      </ul>
+    </div>
+  </div>
+
+  <script>
+    let telegramId = null;
+
+    function onTelegramAuth(user) {
+      telegramId = user.id.toString();
+      document.querySelector('script[data-telegram-login]').style.display = 'none';
+      document.querySelector('#dashboard').classList.remove('hidden');
+      fetchUserData();
+    }
+
+    function fetchUserData() {
+      fetch(`https://yourserver.com/user/${telegramId}`)
+        .then(res => res.json())
+        .then(data => {
+          document.getElementById('wallet-balance').textContent = `${data.walletBalance.toFixed(2)} USDT`;
+          const txList = document.getElementById('transaction-list');
+          txList.innerHTML = data.transactions.length ? '' : '<li>No transactions yet.</li>';
+          data.transactions.forEach(tx => {
+            const item = document.createElement('li');
+            item.textContent = `${tx.type.toUpperCase()} - $${tx.amount} on ${new Date(tx.date).toLocaleString()}`;
+            txList.appendChild(item);
+          });
+        });
+    }
+
+    function completeTask(task) {
+      if (!telegramId) return;
+      fetch('https://yourserver.com/complete-task', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ telegramId, task })
+      });
+    }
+
+    function buyAirdrop() {
+      if (!telegramId) return;
+      const amount = 1;
+      fetch('https://yourserver.com/buy-airdrop', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ telegramId, amount })
+      })
+      .then(() => fetchUserData());
+    }
+  </script>
+</body>
+</html>
