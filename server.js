@@ -8,8 +8,9 @@ const PORT = process.env.PORT || 3000;
 
 app.use(cors());
 app.use(express.json());
+app.use(express.static('public'));
 
-// Fake in-memory database
+// In-memory user storage (for demo)
 const users = {};
 
 // Telegram bot setup
@@ -19,13 +20,10 @@ bot.onText(/\/start/, (msg) => {
   bot.sendMessage(msg.chat.id, '🎉 Welcome to the bot! Visit our site to join the airdrop.');
 });
 
-// Telegram login handler
 app.get('/auth/telegram', (req, res) => {
   const { id, username, first_name, photo_url } = req.query;
-
   if (!id) return res.status(400).send('❌ Missing Telegram ID');
 
-  // Save the user in memory (replace with DB in production)
   users[id] = {
     id,
     username,
@@ -36,20 +34,17 @@ app.get('/auth/telegram', (req, res) => {
     airdropsLeft: 3
   };
 
-  // Redirect to frontend with Telegram ID
-  res.redirect(`https://projext-f7gs.onrender.com/?id=${id}`);
+  res.redirect(`/?id=${id}`);
 });
 
-// Endpoint to fetch user data
 app.get('/user/:id', (req, res) => {
   const user = users[req.params.id];
   if (!user) return res.status(404).send({ error: 'User not found' });
   res.send(user);
 });
 
-// Home check
 app.get('/', (req, res) => {
-  res.send('✅ Backend is running.');
+  res.sendFile(__dirname + '/public/index.html');
 });
 
 app.listen(PORT, () => {
