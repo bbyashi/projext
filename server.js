@@ -1,4 +1,4 @@
-const express = require('express');
+const express = require('express'); 
 const cors = require('cors');
 const TelegramBot = require('node-telegram-bot-api');
 require('dotenv').config();
@@ -10,6 +10,9 @@ const PORT = process.env.PORT || 3000;
 app.use(cors());
 app.use(express.json());
 
+// ✅ Serve static frontend files
+app.use(express.static('public'));
+
 // Telegram bot setup
 const bot = new TelegramBot(process.env.BOT_TOKEN, { polling: true });
 
@@ -17,14 +20,16 @@ bot.onText(/\/start/, (msg) => {
   bot.sendMessage(msg.chat.id, 'Welcome to the bot!');
 });
 
-// Your routes
-app.get('/', (req, res) => {
-  res.send('Server and bot are running.');
-});
-
+// Test route
 app.get('/auth/telegram', (req, res) => {
   const { id, username, first_name } = req.query;
-  res.send(`Hello ${first_name} (@${username}), your ID is ${id}`);
+  if (!id || !username || !first_name) {
+    return res.status(400).send('Missing parameters');
+  }
+
+  // Just confirm the backend receives it
+  console.log(`Telegram login: ${first_name} (@${username}), id: ${id}`);
+  res.redirect('/'); // ✅ Send user back to index.html after login
 });
 
 // Start Express server
