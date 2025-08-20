@@ -1,0 +1,47 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Apply for Remote Work</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}" />
+</head>
+<body>
+  <header>
+    <h1>🌟 We Are Hiring: Part-time and Full-time!</h1>
+    <p>Earn ₹200–₹3000+ per day from home using your smartphone.</p>
+  </header>
+
+  <section class="form-section">
+    <h2>Apply Now</h2>
+    <form action="/apply" method="POST">
+      <input type="text" name="name" placeholder="Full Name" required />
+
+      <select name="country_code" required>
+        <option value="">Select Country Code</option>
+        <option value="+91">🇮🇳 India (+91)</option>
+        <option value="+1">🇺🇸 USA (+1)</option>
+        <option value="+44">🇬🇧 UK (+44)</option>
+        <option value="+971">🇦🇪 UAE (+971)</option>
+        <option value="+61">🇦🇺 Australia (+61)</option>
+      </select>
+
+      <input type="tel" name="phone" placeholder="Phone Number" required />
+      <input type="text" name="telegram" placeholder="Telegram Username (without @)" required />
+
+      <select name="gender" required>
+        <option value="">Gender</option>
+        <option value="Male">Male</option>
+        <option value="Female">Female</option>
+        <option value="Other">Other</option>
+      </select>
+
+      <input type="number" name="age" placeholder="Age" required />
+      <input type="email" name="email" placeholder="Email Address" required />
+
+      <button type="submit">🚀 Apply Now</button>
+    </form>
+  </section>
+</body>
+</html>

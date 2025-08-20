@@ -1,0 +1,31 @@
+{
+  "name": "telegram-bot",
+  "description": "A simple Telegram bot deployed on Heroku.",
+  "repository": "https://github.com/yourusername/telegram-bot",
+  "keywords": ["telegram", "bot", "python"],
+  "env": {
+    "BOT_TOKEN": {
+      "description": "Your Telegram Bot Token",
+      "required": true
+    },
+    "ADMIN_CHAT_ID": {
+      "description": "Telegram Group or Channel Chat ID to receive form submissions",
+      "required": true
+    },
+    "MONGO_URI": {
+      "description": "Your MongoDB Connection URI",
+      "required": true
+    }
+  },
+  "formation": {
+    "worker": {
+      "quantity": 1,
+      "size": "basic"
+    }
+  },
+  "buildpacks": [
+    {
+      "url": "heroku/python"
+    }
+  ]
+}
